@@ -1,8 +1,11 @@
 require("dotenv").config();
-var keys = require("./keys.js");
-
+const keys = require("./keys.js");
+console.log(keys)
 var command  = process.argv[2]
+console.log(command)
 var argument = process.argv.slice(3).join(" ")
+console.log(argument)
+
 
 
 
@@ -80,20 +83,19 @@ var validCommands = {
     },
     'do-what-it-says':function(){
 
-        var filesystem = require('fs')
+        const filesystem = require('fs')
 
 
 
     }
 }
 
-if(validCommands.includes(command)){
     validCommands[command](argument)
-}
+
 
 function make_api_call(_endpoint, _promiss){
 
-    var axios = require('axios')
+    const axios = require('axios')
     
     axios.get(_endpoint).then(function(error, response){
 
