@@ -17,11 +17,26 @@ var validCommands = {
    
         // * Date of the Event (use moment to format this as "MM/DD/YYYY")
         // todo RETURN THE ABOVE
-        var end_point = `https://rest.bandsintown.com/artists/${artist}/events?app_id=codingbootcamp`
-        make_api_call(end_point, function(error, data){
-            
-            
-            console.log(data)
+        var encoded = encodeURIComponent(artist)
+        var end_point = `https://rest.bandsintown.com/artists/${encoded}/events?app_id=codingbootcamp`
+        make_api_call(end_point, function(data){
+            var status = data.status
+                console.log(data)
+            if(status !== 200){
+                console.log(data.status)
+                return
+            }
+            if(status === 200){
+
+                var info = data.data
+
+                if(info.length > 0){
+
+                    //TODO: Show output of data
+
+                }
+            }
+           
 
 
         })
@@ -97,9 +112,9 @@ function make_api_call(_endpoint, _promiss){
 
     const axios = require('axios')
     
-    axios.get(_endpoint).then(function(error, response){
+    axios.get(_endpoint).then(function(response){
 
-        _promiss(error, response)
+        _promiss(response)
 
     })
 }
