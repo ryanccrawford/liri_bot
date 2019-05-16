@@ -39,31 +39,21 @@ var validCommands = function () {
             })
         },
         'spotify-this-song': function (songName) {
-            //         * This will show the following information about the song in your terminal/bash window
-
-            //      * Artist(s)
-
-            //      * The song's name
-
-            //      * A preview link of the song from Spotify
-
-            //      * The album that the song is from
-
-            //    * If no song is provided then your program will default to "The Sign" by Ace of Base.
-
-          
-
+            var searchObject = {}
+            var artist = ''
             var spotifyApi = new spotify({
                 id: Keys.spotify.id,
                 secret: Keys.spotify.secret
             })
+
             spotifyApi.setToken(Keys.spotify.token);
-            var searchObject = {}
+            
             if (!songName) {
                 songName = "The Sign"
-                var artist = "Ace of Base"
-                //q=album:gold%20artist:abba&type=album
+                artist = "Ace of Base"
+                
                 searchObject.type = "track"
+                //Create Filtered Query to find the default
                 searchObject.query = `track:"${songName}" artist:"${artist}"`
                
             } else {
@@ -106,9 +96,14 @@ var validCommands = function () {
             //  * If you haven't watched "Mr. Nobody," then you should: <http://www.imdb.com/title/tt0485947/>
 
             //  * It's on Netflix!
-
-
-
+            var key = Keys.omdb.apikey
+            var endPoint = `http://img.omdbapi.com/?apikey=${key}&`
+            var query = movieName ? movieName : "Mr Nobody"
+            var searchFor = encodeURIComponent(query)
+            var ep = endPoint + "s=" + searchFor + "&type=movie"
+            make_api_call(ep, function (response) {
+                console.log(response)
+            })
         },
         'do-what-it-says': function () {
 
@@ -147,22 +142,4 @@ function make_api_call(_endpoint, _promiss) {
         _promiss(response)
 
     })
-}
-function showTracksData(_responseData) {
-    var tracks = _responseData.tracks
-    for (var track in tracks) {
-        if (Array.isArray(tracks[track])) {
-            console.log(`${track}:`)
-            tracks[track].forEach(element => { 
-                if (typeof (element) === "object") {
-                    for (var item in element) {
-                        console.log(`${item} - ${element[item]}`)
-                    }
-                }
-                console.log(`${element}`)
-            })
-        }
-        console.log(`${track}: ${tracks[track]}`)
-    }
-
 }

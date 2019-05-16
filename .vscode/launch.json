@@ -16,7 +16,7 @@
             "request": "launch",
             "name": "Launch liri",
             "program": "${workspaceFolder}\\liri.js",
-            "args": ["spotify-this-song", ""]
+            "args": ["movie-this", ""]
         }
     ]
 }
