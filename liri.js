@@ -7,7 +7,7 @@ var command = process.argv[2]
 var argument = process.argv.slice(3).join(" ")
 
 //Valid Commands Object to use check input command exist if so call the method with the same name. Arguments are passed as arguments
-var validCommands = function () {
+var Commands = function () {
     return {
         checkCommand: function (_commmand) {
             for (var command in this) {
@@ -114,17 +114,17 @@ var validCommands = function () {
         }
     }
 }
-
+var commands = new Commands()
 if (command === "--help") {
     console.log(`You can use:`)
-    for (var key in validCommands.Keys) {
+    for (var key in commands.Keys) {
         console.log(`${key}`)
         process.exit(0)
     }
 } else
 {
-    var commands = new validCommands()
-    if (!commands.checkCommand(command)) {
+   
+if (!commands.checkCommand(command)) {
         console.log(`${command} is not a valid command. For help use --help`)
         process.exit(0)
     } else {
