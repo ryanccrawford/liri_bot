@@ -1,9 +1,11 @@
 require("dotenv").config();
 const Keys = require("./keys.js");
 const Moment = require("moment");
-const spotify = require("node-spotify-api");
-const axios = require("axios");
-
+const Spotify = require("node-spotify-api");
+const Axios = require("axios");
+const Fs = require("fs");
+const txtFilePath = "random.txt"
+const logfile = "log.txt"
 var command = process.argv[2];
 var argument = process.argv.slice(3).join(" ");
 
@@ -18,26 +20,36 @@ var Commands = function() {
       }
       return false;
     },
-    "concert-this": function(artist) {
+      "concert-this": function (artist) {
+        log('concert-this is processing')
       var encoded = encodeURIComponent(artist);
-      var end_point = `https://rest.bandsintown.com/artists/${encoded}/events?app_id=codingbootcamp`;
-      make_api_call(end_point, function(data) {
-        var status = data.status;
-        if (status !== 200) {
+      var endPoint = `https://rest.bandsintown.com/artists/${encoded}/events?app_id=codingbootcamp`;
+      log(`API endpoint ${endPoint}`)
+          make_api_call(endPoint, function (data) {
+        console.log(`\n\nCalling Bands in Town API Looking the Artist ${artist}`)
+          var status = data.status;
+              if (status !== 200) {
+            log(`Error ${status}, while calling concert-this`)
           return;
         }
-        if (status === 200) {
+              if (status === 200) {
+            log(`Success ${status}`)
           var info = data.data;
           if (info.length > 0) {
             info.forEach(element => {
               var dateofEvent = element.datetime;
               var formatedDate = Moment(dateofEvent).format("MM/DD/YYYY");
               console.log(
-                `Date: ${formatedDate}\nArtist: ${artist}\nVenue:\n${
+                `Date: ${formatedDate}\nArtist: ${element.venue.artist}\nVenue:\n${
                   element.venue.name
-                }\n${element.venue.city}, ${element.venue.region}`
-              );
+                  }\n${element.venue.city}, ${element.venue.region}`
+                );
+                 log(`Date: ${formatedDate}\nArtist: ${element.venue.artist}\nVenue:\n${
+                  element.venue.name
+                  }\n${element.venue.city}, ${element.venue.region}`)
             });
+          } else {
+              console.log(`Sorry, nothing found for ${artist}`)
           }
         }
       });
@@ -45,17 +57,18 @@ var Commands = function() {
     "spotify-this-song": function(songName) {
       var searchObject = {};
       var artist = "";
-      var spotifyApi = new spotify({
+      var spotifyApi = new Spotify({
         id: Keys.spotify.id,
         secret: Keys.spotify.secret
       });
 
       spotifyApi.setToken(Keys.spotify.token);
 
-      if (!songName) {
+        if (!songName) {
+          
         songName = "The Sign";
         artist = "Ace of Base";
-
+        log(`No song name was provided, default ${songName}`)
         searchObject.type = "track";
         //Create Filtered Query to find the default
         searchObject.query = `track:"${songName}" artist:"${artist}"`;
@@ -65,7 +78,8 @@ var Commands = function() {
       }
 
       spotifyApi.search(searchObject).then(
-        function(data) {
+          function (data) {
+              console.log(`\n\nCalling Spotify API looking up the song ${songName}`)
           var tracks = data.tracks.items[0];
           var artist = function() {
             tracks.artists.forEach(artist => {
@@ -73,10 +87,9 @@ var Commands = function() {
             });
           };
           artist();
-          console.log(`Track Name: ${tracks.name}`);
-          console.log(`Album Name: ${tracks.album.name}`);
-          console.log(`Preview Url: ${tracks.preview_url}`);
-        },
+          console.log(`Track Name: ${tracks.name}\nAlbum Name: ${tracks.album.name}\nPreview Url: ${tracks.preview_url}`);
+          log(`Track Name: ${tracks.name}\nAlbum Name: ${tracks.album.name}\nPreview Url: ${tracks.preview_url}`)
+          },
         function(err) {
           console.error(`Erorr: ${err}`);
         }
@@ -100,9 +113,10 @@ var Commands = function() {
 
       //  * It's on Netflix!
 
-      var endpoint = createOmdbEndpoint();
+      var endpoint = createOmdbEndpoint(movieName);
 
-      make_api_call(endpoint, function(data) {
+        make_api_call(endpoint, function (data) {
+          console.log(`\n\nCalling OMDB API for the movie ${movieName}`)
         var status = data.status;
         if (status !== 200) {
           console.log(`Error: ${data.status}`);
@@ -112,18 +126,44 @@ var Commands = function() {
           movieList = [];
           var movie = data.data;
           var Title = movie.Title;
-          var Year = movie.Year;
-          var Rated = movie.Rated;
-          var Tomatoes = movie.Tomatoes;
+          var Year = movie.Released.split(" ")[movie.Released.split(" ").length - 1] ;
+          var imdbRating = movie.imdbRating ? movie.imdbRating: "Not Rated";
+          var Tomatoes = movie.Tomatoes ? movie.Tomatoes:"Not Rated";
           var Language = movie.Language;
           var Plot = movie.Plot;
           var Actors = movie.Actors;
-          console.log(`Title: ${Title}\nStaring: ${Actors}\nAbout: ${Plot}\nReleased: ${Year}\nRated: ${Rated}\nRotten Tomatoes: ${Tomatoes}\nLanguage: ${Language}`);
+          console.log(`Title: ${Title}\nStaring: ${Actors}\nAbout: ${Plot}\nReleased: ${Year}\nimdbRating: ${imdbRating}\nRotten Tomatoes: ${Tomatoes}\nLanguage: ${Language}`);
+          log(`Title: ${Title}\nStaring: ${Actors}\nAbout: ${Plot}\nReleased: ${Year}\nimdbRating: ${imdbRating}\nRotten Tomatoes: ${Tomatoes}\nLanguage: ${Language}`);
+        } else {
+            console.log(`Movie Not Found.\n\n`)
+            log(`Movie Not Found.\n\n`)
         }
       });
     },
     "do-what-it-says": function() {
-      const filesystem = require("fs");
+         Fs.readFile(txtFilePath,"utf8", function (error, data) {
+             if (error) {
+                 console.log(error)
+                 return
+          }
+    
+             if (data) {
+                
+                 var lines = []
+                 if (data.split("\r\n").length) {
+                    lines = data.split("\r\n")
+                 } else {
+                     lines.push(data)
+                 }
+                 lines.forEach(line => { 
+                    var cmdArray = line.split(",")
+                    commands[cmdArray[0]](cmdArray[1])
+                 })
+                  
+                 
+
+             }
+      })
     }
   };
 };
@@ -144,7 +184,7 @@ if (command === "--help") {
 }
 
 function make_api_call(_endpoint, _promiss) {
-  axios.get(_endpoint).then(function(response) {
+  Axios.get(_endpoint).then(function(response) {
     _promiss(response);
   });
 }
@@ -153,4 +193,12 @@ function createOmdbEndpoint(_title) {
   var title = encodeURIComponent(queryS);
   var query = "t=" + title + "&type=movie";
   return `http://omdbapi.com/?apikey=${Keys.omdb.apikey}&${query}`;
+}
+function log(txtString) {
+    var line = txtString + "\r\n"
+    Fs.appendFile(logfile, line, function (error) {
+        if (error) {
+            console.log(`There was an error writing to the log file. Error ${error}`)
+        }    
+    })
 }
